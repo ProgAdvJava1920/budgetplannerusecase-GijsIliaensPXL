@@ -1,6 +1,10 @@
-package be.pxl.student.entity;
+package be.pxl.student.entity.jdbc;
 
 
+import be.pxl.student.entity.Account;
+import be.pxl.student.entity.DAO;
+import be.pxl.student.entity.exception.AccountException;
+import be.pxl.student.entity.exception.AccountNotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,7 +18,11 @@ public class AccountDAO implements DAO<Account, AccountException> {
 
     private Connection connection;
 
-    private static final String SELECT_ALL = "select * from Account;";
+    private static final String SELECT_BY_ID = "select * from Account where id = ?";
+    private static final String SELECT_ALL = "select * from Account";
+    private static final String CREATE_ACCOUNT = "insert into Account (`IBAN`, `name` ) values(?, ?)";
+    private static final String DELETE_ACCOUNT = "delete from Account where id = ?";
+    private static final String UPDATE_ACCOUNT = "update Account set iban = ?, name = ? where id = ?";
 
     private DAOManager manager;
 
@@ -27,7 +35,7 @@ public class AccountDAO implements DAO<Account, AccountException> {
     @Override
     public Account getById(int id) throws AccountException {
 
-        try (PreparedStatement preparedStatement = manager.getConnection().prepareStatement("select * from Account where id = ?")) {
+        try (PreparedStatement preparedStatement = manager.getConnection().prepareStatement(SELECT_BY_ID)) {
             preparedStatement.setInt(1, id); // telt vanaf 1 niet 0
             ResultSet resultSet = preparedStatement.executeQuery();
             if (resultSet.first()) {
@@ -49,11 +57,9 @@ public class AccountDAO implements DAO<Account, AccountException> {
 
     @Override
     public Account create(Account account) throws AccountException {
-        try(PreparedStatement preparedStatement = manager.getConnection().prepareStatement("insert into account (`IBAN`, `name`) values(?,?)");) {
-
-
-            preparedStatement.setString(2, account.getIBAN());
-            preparedStatement.setString(3, account.getName());
+        try(PreparedStatement preparedStatement = manager.getConnection().prepareStatement(CREATE_ACCOUNT)) {
+            preparedStatement.setString(1, account.getIBAN());
+            preparedStatement.setString(2, account.getName());
             int result = preparedStatement.executeUpdate();
             ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
             if(generatedKeys.first()){
@@ -69,7 +75,7 @@ public class AccountDAO implements DAO<Account, AccountException> {
             manager.rollback(e);
             throw new AccountException(String.format("Error creating account [%s]", account), e);
         }
-        throw new AccountException("not yet implemented");
+        throw new AccountException("Could not create account");
     }
 
     @Override
@@ -96,12 +102,32 @@ public class AccountDAO implements DAO<Account, AccountException> {
 
     @Override
     public Account update(Account account) throws AccountException {
-        throw new AccountException("not yet implemented");
+        try (PreparedStatement preparedStatement = manager.getConnection().prepareStatement(UPDATE_ACCOUNT)) {
+            preparedStatement.setString(1, account.getIBAN());
+            preparedStatement.setString(2, account.getName());
+            preparedStatement.setInt(3, account.getId());
+            int result = preparedStatement.executeUpdate();
+            if (result == 1) {
+                return account;
+            }
+        } catch (SQLException e) {
+            throw new AccountException(String.format("Error while updating account [%s]", account.toString()), e);
+        }
+        throw new AccountException("Could not update account");
     }
 
     @Override
     public Account delete(Account account) throws AccountException {
-        throw new AccountException("not yet implemented");
+        try (PreparedStatement preparedStatement = manager.getConnection().prepareStatement(DELETE_ACCOUNT)) {
+            preparedStatement.setInt(1, account.getId());
+            int result = preparedStatement.executeUpdate();
+            if (result == 1) {
+                return account;
+            }
+        } catch (SQLException e) {
+            throw new AccountException(String.format("Error while updating account [%s]", account.toString()), e);
+        }
+        throw new AccountException("Could not delete account");
     }
 
 

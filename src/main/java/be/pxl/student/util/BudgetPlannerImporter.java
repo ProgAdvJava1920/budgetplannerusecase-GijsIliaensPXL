@@ -11,20 +11,17 @@ import java.util.List;
  * Util class to import csv file
  */
 public class BudgetPlannerImporter {
-
-    public static List<String> readCsvFile(Path csvPath) throws BudgetPlannerException {
+    public static List<String> readCsvFile(Path path) throws BudgetPlannerException {
         List<String> csvLines = new ArrayList<>();
 
-        try (BufferedReader reader = Files.newBufferedReader(csvPath)) {
-            String line = reader.readLine();        // ignore first line with descriptions
+        try (BufferedReader reader = Files.newBufferedReader(path)) {
+            String line = reader.readLine(); // ignore 1st line
             while ((line = reader.readLine()) != null) {
                 csvLines.add(line);
             }
         } catch (IOException | NullPointerException e) {
-            throw new BudgetPlannerException("Something went wrong reading the csv file", e);
+            throw new BudgetPlannerException("Something went wrong while reading the csv-file", e);
         }
-
         return csvLines;
     }
-
 }

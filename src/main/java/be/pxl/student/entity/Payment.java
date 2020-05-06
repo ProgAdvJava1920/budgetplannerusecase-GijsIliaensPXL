@@ -1,23 +1,35 @@
 package be.pxl.student.entity;
 
+import javax.persistence.*;
 import java.util.Date;
 import java.util.Objects;
 
+@NamedQuery(name = "findAllPayments", query = "select p from Payment as p")
+@Entity
 public class Payment {
 
-    private int id;
-    private int accountId;
-    private int counterAccountId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id; //PK
+
+    @ManyToOne
+    @JoinColumn(name = "accountId")
+    private Account account;
+    @ManyToOne
+    @JoinColumn(name = "counterAccountId")
+    private Account counterAccount;
+
     private String IBAN;
     private Date date;
     private float amount;
     private String currency;
     private String detail;
 
-    public Payment(int id, int accountId, int counterAccountId, String IBAN, Date date, float amount, String currency, String detail) {
+    public Payment() {
+    }
+
+    public Payment(int id, String IBAN, Date date, float amount, String currency, String detail) {
         this.id = id;
-        this.accountId = accountId;
-        this.counterAccountId = counterAccountId;
         this.IBAN = IBAN;
         this.date = date;
         this.amount = amount;
@@ -31,6 +43,30 @@ public class Payment {
         this.amount = amount;
         this.currency = currency;
         this.detail = detail;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public Account getCounterAccount() {
+        return counterAccount;
+    }
+
+    public void setCounterAccount(Account counterAccount) {
+        this.counterAccount = counterAccount;
     }
 
     public String getIBAN() {
